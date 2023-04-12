@@ -1,6 +1,5 @@
 import math
 import matplotlib.pyplot as plt
-
 import numpy as np
 import matplotlib
 import sys
@@ -90,18 +89,8 @@ for i in range(2, len(inlines)):  # len(inlines) -37300
     flog.write('[%d,%d] ' % (y, x) + str(inda))
     bxy[y, x] = np.array(inda)
 
-
-
-
-
-
-
-
-
 print('splice %d' % (shift_y))
 nbxy = bxy[shift_y:, :]
-
-
 
 nbxy = bxy
 # nbxy = nbxy + [0, 5 ,0 ,0,0,0]
@@ -109,26 +98,59 @@ flog.write((str(bxy.shape)) + '\n')
 flog.write((str(nbxy.shape)) + '\n')
 nw, nh, nc = nbxy.shape
 
-
-
-#*******************  Calc Ne
-# calc max val on first row y>0 BxTKP
+## *******************  Calc Ne,  H erosion
+# calc max val on first row y>0 BxTKP (max_bxtkp)
 max_bxtkp = 0
 for y in range(0, 60):
     y_val = (bxy[y][0][1])
-    if (y_val*100)<=0:
+    if (y_val * 100) <= 0:
         continue
-    row = bxy[y,:,7]
+    row = bxy[y, :, 7]
     max_bxtkp = max(row)
     # print(str(max_bxtkp)+'      '+ str(row))
     break
-#*******************  Calc Ne & He
+    # *******************  Calc Ne & He (erosion)
 
 for y in range(nw):
     for x in range(nh):
-        nbxy[y,x,11] = nbxy[y,x,7] /max_bxtkp
-        #  calc He
-        nbxy[y,x,12] = nbxy[y,x,11] * nbxy[y,x,10]
+        #  calc Ne
+        nbxy[y, x, 11] = nbxy[y, x, 7] / max_bxtkp
+        #  calc H erosion
+        nbxy[y, x, 12] = nbxy[y, x, 11] * nbxy[y, x, 10]
+## end of Calc Ne,  H erosion
+
+## *******************  Calc  Hk (15.)
+delta = 0.99
+std = (1 - delta) / 2
+low1 = 2 * std ** 2
+for y in range(nw):
+    for x in range(nh):
+        #  calc Ne
+        up1 = (nbxy[y, x, 7] / nbxy[y, x, 4] - 1) ** 2
+
+        #  calc H erosion
+        nbxy[y, x, 13] = math.exp(-1.0 * up1 / low1)
+
+## end *******************  Calc  Hk (15.)
+
+## *******************  Calc  profile He (16.)
+delta = 0.99
+std = (1 - delta) / 2
+low1 = 2 * std ** 2
+p16 = np.zeros()
+for y in range(nw):
+    for x in range(nh):
+        #  calc Ne
+        up1 = (nbxy[y, x, 7] / nbxy[y, x, 4] - 1) ** 2
+
+        #  calc H erosion
+        nbxy[y, x, 13] = math.exp(-1.0 * up1 / low1)
+
+## end *******************  Calc  Hk (15.)
+
+
+
+
 line = 'Y      '
 for x in range(w):
     line += " %6.2f" % (nbxy[0][x][0])
@@ -147,10 +169,6 @@ for x in range(w):
 fdata.write(line + '\n')
 flog.close()
 fdata.close()
-
-
-
-
 
 xarr = bxy[0:1, :, 0][0]
 spls = bxy[0:1, :]
@@ -215,7 +233,6 @@ for i in steps:
             plots3.plot(xarr, bx_div_b, colors[step_num], label=str(i) + labelz[0], linestyle='solid')
             break
 
-
 fig, plots4 = plt.subplots(nrows=1, layout='constrained')
 for i in steps:
     # print('I= ' + str(i))
@@ -243,11 +260,6 @@ for i in steps:
             # print(str())
             plots5.plot(xarr, he, colors[step_num], label=str(i) + labelz[0], linestyle='solid')
             break
-
-
-
-
-
 # quit()
 # print('y=' + str(y) + ' ' + str(xarr))
 # print(str(bx))
@@ -270,12 +282,9 @@ plots4.set_title('NE')
 plots4.legend(loc='center left', bbox_to_anchor=(1.0, 0.5),
               fancybox=True, shadow=True, ncol=1)
 
-plots5.set_title('He')
+plots5.set_title('H erosion')
 plots5.legend(loc='center left', bbox_to_anchor=(1.0, 0.5),
               fancybox=True, shadow=True, ncol=1)
-
-
-
 
 # plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
 # plots1[1].legend()
